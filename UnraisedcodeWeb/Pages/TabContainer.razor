@@ -1,0 +1,47 @@
+﻿<div class="navigation">
+    <ActiveItemSymbol @ref="_activeItem" Size="5"></ActiveItemSymbol>
+    <ul>
+        <li @onclick="@(e => SelectIndex(0, "Profile"))">
+            <NavLink class="nav-link" href="">
+                <img src="https://img.icons8.com/fluency/48/000000/username.png"/> About me
+            </NavLink>
+        </li>
+        <li @onclick="@(e => SelectIndex(1, "Journal"))">
+            <NavLink class="nav-link" href="">
+                <img src="https://img.icons8.com/fluency/48/000000/journal.png"/> Journal
+            </NavLink>
+        </li>
+        <li @onclick="@(e => SelectIndex(2, "ReverseLinkedList"))">
+            <NavLink class="nav-link" href="">
+                <img src="https://img.icons8.com/fluency/48/000000/serial-tasks.png"/> Reverse a linked list
+            </NavLink>
+        </li>
+        <li @onclick="@(e => SelectIndex(3, "DFS"))">
+            <NavLink class="nav-link" href="">
+                <img src="https://img.icons8.com/fluency/48/000000/tree-structure.png"/> Deep first search
+            </NavLink>
+        </li>
+        <li @onclick="@(e => SelectIndex(4, "About"))">
+            <NavLink class="nav-link" href="">
+                <img src="https://img.icons8.com/fluency/48/000000/side-pane.png"/> This Website
+            </NavLink>
+        </li>
+    </ul>
+</div>
+
+<div class="dashboard-content">
+    <div class="tab-content">
+        <DynamicComponent Type="@_selectedTab"/>
+    </div>
+</div>
+
+@code {
+    private Type _selectedTab = typeof(Tabs.Profile);
+    private ActiveItemSymbol _activeItem;
+
+    private async Task SelectIndex(int index, string selectedType)
+    {
+        _selectedTab = Type.GetType($"UnraisedcodeWeb.Pages.Tabs.{selectedType}");
+        await _activeItem.SetIndex(index);
+    }
+}

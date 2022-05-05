@@ -1,0 +1,209 @@
+﻿<h3>Deep First Search</h3>
+
+<div class="dfs">
+    <div class="maze">
+    @for(int row = 0; row < maze.GetLength(0); row++)
+    {
+        for (int col = 0; col < maze.GetLength(1); col++)
+        {
+            <div class="cell @maze[row, col]"></div>
+        }
+    }
+    <div class="Boji @BojiAction" style="left:@(Boji.Item2*37)px;top:@(Boji.Item1*32)px"></div>
+    <div class="door"></div>
+    </div>
+</div>
+<button type="button" disabled="@(running ? true : false)" @onclick="NavigateMaze">@buttonText</button>
+
+@code {
+    private const int mazeSize = 11;
+    private bool[,] maze = new bool[mazeSize, mazeSize];
+    private bool[,] visited = new bool[mazeSize, mazeSize];
+    private string buttonText = "Start Quest";
+    private bool running = false;
+    private Tuple<int, int> Boji = Tuple.Create(1, 1);
+    private Tuple<int, int> exit = Tuple.Create(6, 3);
+    private Stack<Tuple<int, int>> availableMoves = new Stack<Tuple<int, int>>();
+    private Stack<Tuple<int, int>> mazePath = new Stack<Tuple<int, int>>();
+    private string BojiAction = string.Empty;
+
+    // Intentionally make Boji move North, South, East, West to take the long path.
+    private int[] dirRow = { 0, 1, 0, -1 };
+    private int[] dirCol = { -1, 0, 1, 0 };
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        InitializeMaze();
+        StateHasChanged();
+    }   
+
+    private async void NavigateMaze()
+    {
+        InitializeMaze();
+        running = true;
+
+        while(availableMoves.Count > 0)
+        {
+            Boji = availableMoves.Pop();
+            await RefreshUI(); 
+
+            if (ExitFound())
+            {                
+                BojiAction = "jump";
+                break;
+            }
+
+            bool canMoveFurther = PushNextMoves();
+
+            if (canMoveFurther)
+            {
+                GoDeeperIntoTheMaze();
+            }
+            else
+            {
+                Backtrack();                
+            }
+        }
+
+        running = false;
+        StateHasChanged();
+    }
+
+    private void InitializeMaze()
+    {
+        Boji = Tuple.Create(1, 1);
+        exit = Tuple.Create(6, 3);
+        availableMoves = new Stack<Tuple<int, int>>();
+        availableMoves.Push(new Tuple<int, int>(1, 1));
+        mazePath = new Stack<Tuple<int, int>>();
+        maze = new bool[mazeSize, mazeSize];
+        visited = new bool[mazeSize, mazeSize];
+        BojiAction = string.Empty;
+
+        // Set path
+        /*   00 01 02 03 04 05 06 07 08 09 10
+        * 00
+        * 01   ++++++++    ++++++++++++++ 
+        * 02   ++    ++    ++        ++
+        * 03   ++          ++        ++ 
+        * 04   ++++++++++++++++      ++
+        * 05                 ++      ++
+        * 06     ++++        ++++++++++
+        * 07     ++          ++
+        * 08     ++          ++         ++
+        * 09   +++++++++++++++++++++++++++ 
+        * 10
+        */
+        maze[1, 1] = true;
+        maze[1, 2] = true;
+        maze[1, 3] = true;
+        maze[1, 5] = true;
+        maze[1, 6] = true;
+        maze[1, 7] = true;
+        maze[1, 8] = true;
+        maze[1, 9] = true;
+
+        maze[2, 1] = true;
+        maze[2, 3] = true;
+        maze[2, 5] = true;
+        maze[2, 8] = true;
+
+        maze[3, 1] = true;
+        maze[3, 5] = true;
+        maze[3, 8] = true;
+
+        maze[4, 1] = true;
+        maze[4, 2] = true;
+        maze[4, 3] = true;
+        maze[4, 4] = true;
+        maze[4, 5] = true;
+        maze[4, 6] = true;
+        maze[4, 8] = true;
+
+        maze[5, 6] = true;
+        maze[5, 8] = true;
+
+        maze[6, 2] = true;
+        maze[6, 3] = true;
+        maze[6, 6] = true;
+        maze[6, 7] = true;
+        maze[6, 8] = true;
+
+        maze[7, 2] = true;
+        maze[7, 6] = true;
+
+        maze[8, 2] = true;
+        maze[8, 6] = true;
+        maze[8, 9] = true;
+
+        maze[9, 1] = true;
+        maze[9, 2] = true;
+        maze[9, 3] = true;
+        maze[9, 4] = true;
+        maze[9, 5] = true;
+        maze[9, 6] = true;
+        maze[9, 7] = true;
+        maze[9, 8] = true;
+        maze[9, 9] = true;
+    }
+
+    private async Task RefreshUI()
+    {
+        StateHasChanged();
+        await Task.Delay(500);
+    }
+
+    private bool ExitFound()
+    {
+        return Boji.Item1 == exit.Item1 && Boji.Item2 == exit.Item2;
+    }
+
+    private bool PushNextMoves()
+    {
+        visited[Boji.Item1, Boji.Item2] = true;
+
+        bool canMoveFurther = false;
+        for(int i = 0; i < 4; i++)
+        {
+            int adjRow = Boji.Item1 + dirRow[i];
+            int adjCol = Boji.Item2 + dirCol[i];
+
+            if (IsValid(adjRow, adjCol))
+            {
+                availableMoves.Push(new Tuple<int, int>(adjRow, adjCol));
+                canMoveFurther = true;
+            }
+        }
+
+        return canMoveFurther;
+    }
+
+    private bool IsValid(int row, int col)
+    {
+
+        if (col < 0 || row < 0 || col >= mazeSize || row >= mazeSize)
+        {
+            return false;
+        }
+
+        if (visited[row, col])
+        {
+            return false;
+        }
+
+        return maze[row, col];
+    }   
+
+    private void GoDeeperIntoTheMaze()
+    {
+         mazePath.Push(Boji);
+    } 
+
+    private void Backtrack()
+    {
+        availableMoves.Push(mazePath.Pop());
+    }
+   
+}

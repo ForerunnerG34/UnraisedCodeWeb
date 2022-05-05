@@ -1,0 +1,187 @@
+﻿<h3>Reverse a linked list</h3>
+@using Data
+
+<div class="linked-list">
+    <div class="pointer" style="left:@(head == null ? initialSpace : head.Position)px" data-title="head"></div>
+
+    <div class="pointer @(prev == null ? string.Empty : prev.ArrowDirection)" style="left:@(prev == null ? initialSpace : prev.Position)px" data-title="prev"></div>
+    <div class="pointer alt rotate-right @(curr == null ? string.Empty : curr.ArrowDirection)" style="left:@(curr == null ? initialSpace : curr.Position)px" data-title="current"></div>
+
+    <div class="node null">NULL</div>
+    @{node = head;
+    while (node != null)
+    {
+        <div class="node">
+            @node.Data
+        </div>
+        <div class="arrow @node.ArrowDirection" id="arrow_@node.Data">
+            <div class="line"></div>
+            <div class="tip"></div>
+        </div>
+        node = node.Next;
+    }
+    }
+    <div class="node null @(next == null ? string.Empty : next.ArrowDirection)">NULL</div>
+    <div class="pointer bottom @(next == null ? string.Empty : next.ArrowDirection)" style="left:@(next == null ? initialSpace :next.Position)px" data-title="next"></div>
+</div>
+
+<div class="pen-code">
+    <div>while (current != null)</div>
+    <div>{</div>
+    <div class="indent @(codeLine == 1 ? "current-line" : string.Empty)">next = current.Next;</div>
+    <div class="indent @(codeLine == 2 ? "current-line" : string.Empty)">current.Next = prev;</div>
+    <div class="indent @(codeLine == 3 ? "current-line" : string.Empty)">prev = current;</div>
+    <div class="indent @(codeLine == 4 ? "current-line" : string.Empty)">current = next;</div>
+    <div>}</div>
+    <div class="@(codeLine == 5 ? "current-line" : string.Empty)">header = prev;</div>
+</div>
+
+<button type="button" disabled="@(running ? true : false)" @onclick="ReverseList">@buttonText</button>
+
+@code {
+    private Node? node;
+    private Node head;
+    private Node prev;
+    private Node curr;
+    private Node next;
+    private double inBetweenSpace = 90;
+    private double initialSpace = 38;
+    private int codeLine = 0;
+    private string buttonText = "Reverse";
+    private bool running = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        InitializeList();
+    }
+
+    private void InitializeList()
+    {
+        int listSize = 4;        
+        curr = new(0);
+        next = new(0);
+        prev = new(0);
+        node = new(1);
+
+        head = node;        
+        head.Position = curr.Position = initialSpace + inBetweenSpace;
+        next.Position = prev.Position = initialSpace;
+
+        for (int i = 1; i < listSize; i++)
+        {
+            node.Next = new(i+1);
+            node = node.Next;
+        }
+    }    
+
+    private async void ReverseList()
+    {
+        await Start();
+
+        Node uiPointer = head;
+
+        while (uiPointer != null)
+        {
+            await NextToCurrentNext();
+            await ReverseArrowFor(uiPointer);
+            await PrevToCurrent();
+            await CurrentToNext();
+
+            uiPointer = uiPointer.Next;
+        }
+
+        await HeadToPrev();
+        await End();
+    }
+
+    private async Task Start()
+    {
+        running = true;
+        buttonText = "Reversing...";
+        InitializeList();
+
+        StateHasChanged();
+        await Task.Delay(1000);
+    }
+
+    private async Task NextToCurrentNext()
+    {
+        codeLine = 1;
+
+        next.Position = curr.Position + inBetweenSpace;
+
+        await RefreshUI();
+    }
+
+    private async Task ReverseArrowFor(Node node)
+    {
+        codeLine = 2;
+
+        node.ArrowDirection = "reverse";
+
+        await RefreshUI();
+    }
+
+    private async Task PrevToCurrent()
+    {
+        codeLine = 3;
+
+        prev.Position += inBetweenSpace;
+        if(head.Position == prev.Position)
+        {
+            prev.ArrowDirection = "rotate-left";    
+        }
+        else
+        {
+            prev.ArrowDirection = string.Empty;
+        }
+
+        await RefreshUI();
+    }
+
+    private async Task CurrentToNext()
+    {
+        codeLine = 4;
+
+        curr.Position += inBetweenSpace;
+
+        await RefreshUI();
+    }
+
+    private async Task HeadToPrev()
+    {
+        codeLine = 5;
+        
+        prev.ArrowDirection = "rotate-right";    
+        head.Position = prev.Position;
+
+        await RefreshUI();
+    }    
+
+    private async Task End()
+    {
+        await CleanUp();
+        buttonText = "Reverse";
+        running = false;
+
+        StateHasChanged();
+    }
+
+    private async Task CleanUp()
+    {
+        prev.ArrowDirection = "rotate-right hide";    
+        next.ArrowDirection = "hide";    
+        curr.ArrowDirection = "hide";
+
+        StateHasChanged();
+        await Task.Delay(1500);
+    }
+
+    private async Task RefreshUI()
+    {
+        StateHasChanged();
+        await Task.Delay(2000);
+    }
+}

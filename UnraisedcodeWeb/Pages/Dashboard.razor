@@ -1,0 +1,21 @@
+﻿<div class="title @DynamicClass"
+    @onclick="RestoreWindow">
+    <span>Hi! I'm Cesar</span>
+    <TabContainer></TabContainer>
+</div>
+
+@code {
+    string DynamicClass { get; set; } = string.Empty;
+
+    private async void RestoreWindow()
+    {
+        if (string.IsNullOrEmpty(DynamicClass))
+        {
+            DynamicClass = "pre-initial-window-state";
+            StateHasChanged();
+            await Task.Delay(600);
+            DynamicClass = "initial-window-state";
+            StateHasChanged();
+        }
+    }
+}

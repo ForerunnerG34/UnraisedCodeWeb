@@ -1,0 +1,41 @@
+﻿<style>
+@for(int i =0; i<Size; i++)
+{
+    @(".selected-item.index-" + i + " {top: " + (i*40) + "px;}");
+}
+</style>
+
+<div class="selected-item index-@Index @Status"></div>
+
+@code {
+    [Parameter] public int Size { get; set; } = 0;
+
+    private int Index = 0;
+    private string Status = string.Empty;
+
+    public async Task SetIndex(int index)
+    {
+        int previousIndex = Index;
+        int speed = GetTranslateSpeed(previousIndex, index);
+        Status = "moving" + speed;
+        Index = index;
+        StateHasChanged();
+
+        await Task.Delay(speed);
+
+        Status = "stop"+ speed;
+        StateHasChanged();
+    }
+
+    private int GetTranslateSpeed(int previousIndex, int newIndex)
+    {
+        int delta = Math.Abs(previousIndex - newIndex);
+
+        if (delta < 2)
+        {
+            return 250;
+        }
+
+        return 400;
+    }
+}

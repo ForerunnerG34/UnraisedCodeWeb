@@ -1,0 +1,104 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+
+
+<div class="dark">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" class="svg_dd790ee3" focusable="false"><path d="M128 1536q141 0 272-36t244-104 207-160 161-207 103-245 37-272q0-133-34-261T1019 8q128 16 245 61t217 115 181 161 138 199 89 229 31 251q0 141-36 272t-104 244-160 207-207 161-245 103-272 37q-138 0-269-36t-246-103-212-164T5 1528q31 4 61 6t62 2zm768 384q124 0 238-32t214-90 181-140 140-181 91-214 32-239q0-136-40-263t-112-236-176-194-229-136q45 155 45 317 0 146-35 282t-100 258-157 225-205 182-244 129-277 68q128 128 290 196t344 68z"></path></svg>
+</div>
+
+<div class="light">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" class="svg_dd790ee3" focusable="false"><path d="M960 512q93 0 174 35t143 96 96 142 35 175q0 93-35 174t-96 143-142 96-175 35q-93 0-174-35t-143-96-96-142-35-175q0-93 35-174t96-143 142-96 175-35zm0 768q66 0 124-25t101-68 69-102 26-125q0-66-25-124t-69-101-102-69-124-26q-66 0-124 25t-102 69-69 102-25 124q0 66 25 124t68 102 102 69 125 25zm64-896H896V0h128v384zM896 1536h128v384H896v-384zm1024-640v128h-384V896h384zM384 1024H0V896h384v128zm123-426L236 326l90-90 272 271-91 91zm906 724l271 272-90 90-272-271 91-91zm0-724l-91-91 272-271 90 90-271 272zm-906 724l91 91-272 271-90-90 271-272z"></path></svg>
+</div>
+
+
+<label class="switch">
+  <input type="checkbox" @bind="lightmode" @onclick="SwitchTheme">
+  <span class="slider round"></span>
+</label>
+
+<style>
+    .theme .wrapper{
+        display:@display;
+    }
+
+    .theme  .loading{
+        display:@loading;
+    }
+</style>
+
+    @if(!lightmode)
+    {
+<style>
+.theme {
+    --panel-bg-color: #2f2a2a;
+    --panel-bg-alt-color: #504041;
+    --panel-border-alt-color: #c0c0c000;
+    --panel-shadow:  rgb(0 0 0 / 35%) 0px 5px 15px;
+    --nav-color: #d5c7c9;
+    --nav-bg-color: #00000055;
+    --nav-bg-hover-color: #ba6d70;
+    --nav-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    --link-color: #fd6c6e;
+    --header-color: #f9f9f9;
+    --text-color: #d1cecd;
+    --text-alt-color: #989393;
+    --button-text-color: #fff;
+    --button-color: #9d7c7e22;
+    --button-hover-color: #9d7c7e55;
+    --button-border-color: #ffffff77;
+    --app-bg: rgb(229, 162, 159);
+    --app-bg-gradient: linear-gradient(45deg, rgba(113,60,74,1) 0%, rgba(160,89,98,1) 31%, rgba(184,107,110,1) 48%, rgba(255,173,170,1) 84%, rgba(220,159,156,1) 100%);
+    --debug-bg-color: #ffe78a;
+    }
+    </style>
+}
+else
+{
+    <style>
+.theme {
+    --panel-bg-color: #f3f3f3;
+    --panel-bg-alt-color: #fff;
+    --panel-border-alt-color: #c0c0c0;
+    --panel-shadow:  rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+    --nav-color: #182519;
+    --nav-bg-color: #ffffff55;
+    --nav-bg-hover-color: #ffffff;
+    --nav-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    --link-color: #ec9c0f;
+    --header-color: #5f6b74;
+    --text-color: #1a1a1a;
+    --text-alt-color: #4c6072;
+    --button-text-color: #1a1a1a;
+    --button-color: #fafafa;
+    --button-hover-color: #f5f7f9;
+    --button-border-color: #00000077;
+    --app-bg: rgb(199,213,213);
+    --app-bg-gradient: linear-gradient(131deg, rgba(199,213,213,1) 0%, rgba(187,203,204,1) 25%, rgba(193,207,208,1) 46%, rgba(172,192,191,1) 100%);
+    --debug-bg-color: #ffc900;
+    }
+    </style>
+}
+
+@code {
+    private bool lightmode = true;
+    private string display = "none";
+    private string loading = "flex";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await ProtectedLocalStore.GetAsync<bool>("theme");
+            lightmode = result.Success ? result.Value : true;
+            display = "flex";
+            loading = "none";
+            StateHasChanged();
+        }
+    }
+
+    private async void SwitchTheme(){
+        lightmode = !lightmode;
+        await ProtectedLocalStore.SetAsync("theme", lightmode);
+        StateHasChanged();
+    }
+}
